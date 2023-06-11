@@ -17,3 +17,15 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./database:/data
     command: sqlite3 /data/database.db < /docker-entrypoint-initdb.d/init.sql
+
+  django:
+    build:
+      context: ./django-app  # Specify the relative path to the Django app directory
+      dockerfile: Dockerfile  # Reference the Dockerfile inside the Django app directory
+    volumes:
+      - ./django-app:/app  # Mount the Django app directory
+    ports:
+      - 8000:8000  # Expose port 8000 for the Django app
+    depends_on:
+      - db
+    command: python manage.py runserver 0.0.0.0:8000  # Replace with your Django command

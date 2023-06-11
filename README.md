@@ -1,10 +1,18 @@
 # Start
 
-run `python3 -m venv venv`
+run `python -m venv venv`
+
+in a terminal run `cd django-app` and `python -m venv env`
+
+Then cd up and run `bash rebuild-docker.sh`
+
+
+Open virtual env for bot with `source venv/Scripts/activate`
+
+in a terminal run `cd django-app` for Admin and run with `source env/Scripts/activate`
 
 # Test Suite
 
-Open virtual env with `source venv/Scripts/activate`
 
 Run `pytest`
 
