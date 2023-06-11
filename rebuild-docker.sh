@@ -1,5 +1,41 @@
 #!/bin/bash
 
+ENV_FILE_PATH=".env"  # Specify the directory path where the .env file should be located
+
+if [ ! -f "$ENV_FILE_PATH" ]; then
+  echo "ERROR: .env file not found in $ENV_FILE_PATH!"
+  exit 1
+fi
+
+critical_variables=("QUEST_TRACKER_BOT_TOKEN")  # Add other critical variables here if needed
+
+if [ ! -f "$ENV_FILE_PATH" ]; then
+  echo "ERROR: .env file not found in $ENV_FILE_PATH!"
+  exit 1
+fi
+
+for variable in "${critical_variables[@]}"; do
+  if grep -qE "^\s*[^#]*$variable=" "$ENV_FILE_PATH"; then
+    value=$(grep -E "^\s*[^#]*$variable=" "$ENV_FILE_PATH" | cut -d '=' -f 2- | grep -vE '^\s*#')
+
+    if [ -z "$value" ] || [ "$value" == "''" ] || [ "$value" == '""' ]; then
+      if grep -qE "^\s*#[^#]*$variable=" "$ENV_FILE_PATH"; then
+        echo "ERROR: '$variable' property in .env file is commented out!"
+      else
+        echo "ERROR: '$variable' property in .env file is either empty or set to an empty string!"
+      fi
+      exit 1
+    fi
+  else
+    if grep -qE "^\s*#[^#]*$variable=" "$ENV_FILE_PATH"; then
+      echo "ERROR: '$variable' property in .env file is commented out!"
+    else
+      echo "ERROR: .env file in $ENV_FILE_PATH does not contain '$variable' property!"
+    fi
+    exit 1
+  fi
+done
+
 
 docker login
 

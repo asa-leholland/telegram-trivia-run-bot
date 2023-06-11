@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_BOT_TOKEN = os.getenv("QUEST_TRACKER_BOT_TOKEN")
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
