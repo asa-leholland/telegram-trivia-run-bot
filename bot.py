@@ -7,6 +7,7 @@ from aiogram import executor
 import sqlite3
 import os
 from dotenv import load_dotenv
+from .adminApp.QuestTrackerAdmin.models import User, Progress, Player
 
 # Load environment variables from .env file
 load_dotenv()
@@ -59,22 +60,19 @@ async def register_event(message: types.Message):
 # Command to start an event
 @dp.message_handler(Command("start_event"))
 async def start_event(message: types.Message):
-    # Get the list of registered users from the database
-    cursor.execute("SELECT username FROM users")
-    registered_users = [row[0] for row in cursor.fetchall()]
+    registered_users = User.objects.all()
 
     # Send a message to all registered users
     for user in registered_users:
-        await bot.send_message(user, "The event has started! Here are the details: ...")
+        await bot.send_message(user.username, "The event has started! Here are the details: ...")
 
 
 # Command to complete an objective
 @dp.message_handler(Command("complete_objective"))
 async def complete_objective(message: types.Message, state: FSMContext):
     # Check if the user is registered for the event
-    cursor.execute("SELECT * FROM users WHERE username=?", (message.from_user.username,))
-    user_data = cursor.fetchone()
-    if user_data is None:
+    user = Player.objects.filter(username=message.from_user.username).first()
+    if user is None:
         await message.reply("You are not registered for the current event.")
         return
 
@@ -88,21 +86,16 @@ async def complete_objective(message: types.Message, state: FSMContext):
         return
 
     # Update player's progress and provide feedback
-    player_id = user_data[0]  # Assuming the player's ID is stored in the first column of the 'users' table
+    player_id = user.id  # Assuming the player's ID is stored in the first column of the 'users' table
     player_progress = track_progress(player_id, objective_id)
     feedback_message = f"Objective {objective_id} completed!\nYour progress: {player_progress}"
     await message.reply(feedback_message)
 
 
 def track_progress(player_id, objective_id):
-    # Update player's progress in the database
-    cursor.execute("INSERT INTO progress (player_id, objective_id) VALUES (?, ?)", (player_id, objective_id))
-    conn.commit()
-
-    # Retrieve updated player's progress from the database
-    cursor.execute("SELECT COUNT(*) FROM progress WHERE player_id=?", (player_id,))
-    player_progress = cursor.fetchone()[0]
-
+    # Retrieve player's progress from the database
+    # use djnago model
+    player_progress = Progress.objects.filter(player_id=player_id, objective_id=objective_id).first()
     return player_progress
 
 
@@ -110,29 +103,33 @@ def track_progress(player_id, objective_id):
 @dp.message_handler(Command("coins"))
 async def show_coin_balance(message: types.Message):
     # Check if the user is registered for the event
-    cursor.execute("SELECT * FROM users WHERE username=?", (message.from_user.username,))
-    user_data = cursor.fetchone()
-    if user_data is None:
-        await message.reply("You are not registered for the current event.")
-        return
+    # use django
+    user = Player.objects.filter(username=message.from_user.username).first()
+    if user is None:
+        return await message.reply("You are not registered for the current event.")
 
     # Retrieve user's coin balance from the database
-    player_id = user_data[0]  # Assuming the player's ID is stored in the first column of the 'users' table
-    cursor.execute("SELECT coin_balance FROM players WHERE id=?", (player_id,))
-    coin_balance = cursor.fetchone()[0]
-
+    player_id = user.id
+    coin_balance = get_coin_balance(player_id)
     await message.reply(f"Your coin balance: {coin_balance}")
 
+
+def get_coin_balance(player_id):
+    # Retrieve player's coin balance from the database
+    # use django
+    player = Player.objects.filter(id=player_id).first()
+    return player.coin_balance
 
 # Command to complete an objective
 @dp.message_handler(Command("complete_objective"))
 async def complete_objective(message: types.Message, state: FSMContext):
-    # Check if the user is registered for the event
-    cursor.execute("SELECT * FROM users WHERE username=?", (message.from_user.username,))
-    user_data = cursor.fetchone()
-    if user_data is None:
-        await message.reply("You are not registered for the current event.")
-        return
+    # use djnaog
+    user = Player.objects.filter(username=message.from_user.username).first()
+    if user is None:
+        return await message.reply("You are not registered for the current event.")
+
+    player_id = user.id
+
 
     # Process objective completion
     try:
@@ -143,23 +140,16 @@ async def complete_objective(message: types.Message, state: FSMContext):
         await message.reply("Invalid objective ID format. Please use the correct format.")
         return
 
-    # Update player's progress and provide feedback
-    player_id = user_data[0]  # Assuming the player's ID is stored in the first column of the 'users' table
     player_progress = track_progress(player_id, objective_id)
     feedback_message = f"Objective {objective_id} completed!\nYour progress: {player_progress}"
     await message.reply(feedback_message)
 
 
 def track_progress(player_id, objective_id):
-    # Update player's progress in the database
-    cursor.execute("INSERT INTO progress (player_id, objective_id) VALUES (?, ?)", (player_id, objective_id))
-    conn.commit()
-
-    # Retrieve updated player's progress from the database
-    cursor.execute("SELECT COUNT(*) FROM progress WHERE player_id=?", (player_id,))
-    player_progress = cursor.fetchone()[0]
-
-    return player_progress
+    # Retrieve player's progress from the database
+    player = Player.objects.filter(id=player_id).first()
+    progress = Progress.objects.filter(player=player, objective_id=objective_id).first()
+    return progress.current_progress
 
 # Other command handlers, error handlers, and additional functionality can be added as needed.
 

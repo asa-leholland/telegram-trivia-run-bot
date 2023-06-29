@@ -18,6 +18,7 @@ class Event(models.Model):
 class Progress(models.Model):
     player = models.ForeignKey(User, on_delete=models.CASCADE)
     objective_id = models.IntegerField()
+    current_progress = models.IntegerField()
 
     def __str__(self):
         return f"Player: {self.player.username}, Objective ID: {self.objective_id}"

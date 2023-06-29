@@ -4,4 +4,4 @@ venv/
 .env
 .vscode/
 
-django-app/env/
+adminApp/env/

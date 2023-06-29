@@ -20,10 +20,10 @@ services:
 
   django:
     build:
-      context: ./django-app  # Specify the relative path to the Django app directory
+      context: ./adminApp  # Specify the relative path to the Django app directory
       dockerfile: Dockerfile  # Reference the Dockerfile inside the Django app directory
     volumes:
-      - ./django-app:/app  # Mount the Django app directory
+      - ./adminApp:/app  # Mount the Django app directory
     ports:
       - 8000:8000  # Expose port 8000 for the Django app
     depends_on:
